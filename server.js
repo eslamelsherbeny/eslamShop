@@ -32,6 +32,14 @@ if (process.env.NODE_ENV === "development") {
 mountRoutes(app);
 
 // global error
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
+app.get("/", (req, res) => {
+  res.send("Welcome to the API");
+});
 
 app.all("*", (req, res, next) => {
   next(
