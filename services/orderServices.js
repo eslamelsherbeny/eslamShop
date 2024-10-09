@@ -137,22 +137,21 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
     client_reference_id: req.params.cartId,
     metadata: shippingAddress,
 
-    success_url: `${req.protocol}://${req.get("host")}/orders`,
+    success_url: `${req.protocol}://${req.get("host")}/api/v1/orders`,
     cancel_url: `${req.protocol}://${req.get("host")}/cart`,
   });
-
-  console.log("Paymentddddddddddddddddddddddddddddddddddddddddddd successfull");
 
   res.status(200).json({ status: "success", data: session, url: session.url });
 });
 
 const createCardOrder = async (session) => {
   const cart = await Cart.findById(session.client_reference_id);
+  const shippingAddress = session.metadata;
   const user = await User.findOne({ email: session.customer_email });
   const order = await Order.create({
     user: user,
     totalOrderPrice: session.amount_total,
-    shippingAddress: session.metadata,
+    shippingAddress,
     cartItems: cart.cartItems,
     isPaid: true,
     paidAt: Date.now(),
@@ -169,7 +168,7 @@ const createCardOrder = async (session) => {
     await Product.bulkWrite(bulkOption, {});
   }
 
-  await Cart.findByIdAndDelete(session.client_reference_id);
+  await Cart.findByIdAndDelete(cart);
 };
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   let event;
