@@ -140,6 +140,8 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
     cancel_url: `${req.protocol}://${req.get("host")}/cart`,
   });
 
+  console.log("Paymentddddddddddddddddddddddddddddddddddddddddddd successfull");
+
   res.status(200).json({ status: "success", data: session, url: session.url });
 });
 
@@ -157,6 +159,9 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   }
 
   if (event.type === "checkout.session.completed") {
+    console.log(
+      "Paymentddddddddddddddddddddddddddccccccccccccccccccccccccccddddddddddddddddd successfull"
+    );
     console.log("Payment successfull");
   }
 });
