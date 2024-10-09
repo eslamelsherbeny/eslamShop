@@ -33,10 +33,6 @@ mountRoutes(app);
 
 // global error
 
-app.get("/", (req, res) => {
-  res.send("Welcome to the API");
-});
-
 app.all("*", (req, res, next) => {
   next(
     new ApiError(`Cant find this route ${req.originalUrl} on this server`, 400)
