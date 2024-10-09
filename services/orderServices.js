@@ -137,7 +137,7 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
     client_reference_id: req.params.cartId,
     metadata: shippingAddress,
 
-    success_url: `${req.protocol}://${req.get("host")}/api/v1/orders`,
+    success_url: `${req.protocol}://${req.get("host")}/orders`,
     cancel_url: `${req.protocol}://${req.get("host")}/cart`,
   });
 
