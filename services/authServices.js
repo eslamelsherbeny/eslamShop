@@ -54,7 +54,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
     return next(new ApiError("you are not logged in,please login again", 401));
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+  const decoded = jwt.verify(token, `${process.env.JWT_SECRET_Key}`);
 
   const currentUser = await User.findById(decoded.userId);
 
