@@ -13,6 +13,8 @@ const ApiError = require("./utils/apiError");
 const globalError = require("./middleWares/errorMiddleware");
 const mountRoutes = require("./routes/index");
 
+const { webhookCheckout } = require("./services/orderServices");
+
 // connect to database
 
 dbConnection();
@@ -30,6 +32,7 @@ app.post(
   express.raw({ type: "application/json" }),
   webhookCheckout
 );
+
 // middleware
 app.use(express.json());
 
