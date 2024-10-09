@@ -28,7 +28,7 @@ app.options("*", cors());
 // webhook
 
 app.post(
-  "/webhook",
+  "/webhook-checkout",
   express.raw({ type: "application/json" }),
   webhookCheckout
 );
