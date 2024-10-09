@@ -1,8 +1,11 @@
 const path = require("path");
 
+const cors = require("cors");
+
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
+const compression = require("compression");
 
 dotenv.config();
 const dbConnection = require("./confiq/dataBase");
@@ -16,7 +19,17 @@ dbConnection();
 
 // express app
 const app = express();
+app.use(cors());
+app.use(compression());
+app.options("*", cors());
 
+// webhook
+
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  webhookCheckout
+);
 // middleware
 app.use(express.json());
 
