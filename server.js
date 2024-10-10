@@ -38,12 +38,10 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "uploads")));
 
-app.use(morgan("dev"));
-
-// if (process.env.NODE_ENV === "development") {
-//   app.use(morgan("dev"));
-//   console.log(`mode is ${process.env.NODE_ENV}`);
-// }
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+  console.log(`mode is ${process.env.NODE_ENV}`);
+}
 
 // mount routes
 
