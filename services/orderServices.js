@@ -146,17 +146,10 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
 
 const createCardOrder = async (session, next) => {
   try {
-    console.log("Session details:", session);
     const cartId = session.client_reference_id;
     const shippingAddress = session.metadata;
     const orderPrice = session.amount_total / 100;
     const customerEmail = session.customer_email;
-
-    // Log the critical data to make sure it exists
-    console.log("Cart ID:", cartId);
-    console.log("Shipping Address:", shippingAddress);
-    console.log("Order Price:", orderPrice);
-    console.log("Customer Email:", customerEmail);
 
     if (!cartId || !customerEmail) {
       console.error("Missing necessary data for creating order.");
@@ -176,9 +169,6 @@ const createCardOrder = async (session, next) => {
       return next(new ApiError("User not found", 404));
     }
 
-    console.log("Cart fetched:", cart);
-    console.log("User fetched:", user);
-
     const order = await Order.create({
       user: user._id,
       cartItems: cart.cartItems,
@@ -189,8 +179,6 @@ const createCardOrder = async (session, next) => {
       paymentMethodType: "Card",
     });
 
-    console.log("Order created successfully:", order);
-
     if (order) {
       const bulkOption = cart.cartItems.map((item) => ({
         updateOne: {
@@ -199,11 +187,9 @@ const createCardOrder = async (session, next) => {
         },
       }));
       await Product.bulkWrite(bulkOption, {});
-      console.log("Product quantities updated successfully.");
 
       // Clear cart based on cartId
       await Cart.findByIdAndDelete(cartId);
-      console.log("Cart cleared successfully.");
     }
   } catch (error) {
     console.error("Error creating order:", error);
@@ -229,14 +215,7 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
       .send(`Webhook Error-------------------------: ${err.message}`);
   }
 
-  console.log("Received event--------------:", event);
-
   if (event.type === "checkout.session.completed") {
-    //  Create order
-    console.log(
-      "Checkout session details:+++++++++++++++++++++",
-      event.data.object
-    );
     createCardOrder(event.data.object, next);
   }
 
