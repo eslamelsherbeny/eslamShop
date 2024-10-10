@@ -29,7 +29,7 @@ app.options("*", cors());
 
 app.post(
   "/webhook-checkout",
-  express.raw({ type: "application/json" }), // Stripe needs raw JSON body
+  express.raw({ type: "application/json" }),
   webhookCheckout
 );
 

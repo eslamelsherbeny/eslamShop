@@ -145,18 +145,25 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
 });
 
 const createCardOrder = async (session) => {
-  const cart = await Cart.findById(session.client_reference_id);
+  const cartId = session.client_reference_id;
   const shippingAddress = session.metadata;
+  const oderPrice = session.amount_total / 100;
+
+  const cart = await Cart.findById(cartId);
   const user = await User.findOne({ email: session.customer_email });
+
+  // 3) Create order with default paymentMethodType card
   const order = await Order.create({
-    user: user,
-    totalOrderPrice: session.amount_total,
-    shippingAddress,
+    user: user._id,
     cartItems: cart.cartItems,
+    shippingAddress,
+    totalOrderPrice: oderPrice,
     isPaid: true,
     paidAt: Date.now(),
     paymentMethodType: "card",
   });
+
+  // 4) After creating order, decrement product quantity, increment product sold
   if (order) {
     const bulkOption = cart.cartItems.map((item) => ({
       updateOne: {
@@ -164,30 +171,28 @@ const createCardOrder = async (session) => {
         update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
       },
     }));
-
     await Product.bulkWrite(bulkOption, {});
-  }
 
-  await Cart.findByIdAndDelete(cart);
+    // 5) Clear cart depend on cartId
+    await Cart.findByIdAndDelete(cartId);
+  }
 };
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
+  const sig = req.headers["stripe-signature"];
+
   let event;
-  const signature = req.headers["stripe-signature"];
 
   try {
     event = stripe.webhooks.constructEvent(
       req.body,
-      signature,
+      sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.log("⚠️  Webhook signature verification failed.", err.message);
-    return res.status(400).send(`Webhook error: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-
-  console.log("✅ Webhook event received:", event);
-
   if (event.type === "checkout.session.completed") {
+    //  Create order
     createCardOrder(event.data.object);
   }
 
