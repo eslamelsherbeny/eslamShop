@@ -145,42 +145,63 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
 });
 
 const createCardOrder = async (session) => {
-  console.log("order=========:", session);
-  const cartId = session.client_reference_id;
-  const shippingAddress = session.metadata;
-  const oderPrice = session.amount_total / 100;
+  try {
+    console.log("order=========:", session);
+    const cartId = session.client_reference_id;
+    const shippingAddress = session.metadata;
+    const orderPrice = session.amount_total / 100;
 
-  const cart = await Cart.findById(cartId);
-  const user = await User.findOne({ email: session.customer_email });
+    // Fetch Cart and User
+    const cart = await Cart.findById(cartId);
+    const user = await User.findOne({ email: session.customer_email });
 
-  // 3) Create order with default paymentMethodType card
-  const order = await Order.create({
-    user: user._id,
-    cartItems: cart.cartItems,
-    shippingAddress,
-    totalOrderPrice: oderPrice,
-    isPaid: true,
-    paidAt: Date.now(),
-    paymentMethodType: "card",
-  });
+    if (!cart) {
+      console.error("Cart not found");
+      return;
+    }
+    if (!user) {
+      console.error("User not found");
+      return;
+    }
 
-  console.log(" after/////////////order=========:");
+    // Log the fetched cart and user
+    console.log("Cart fetched:", cart);
+    console.log("User fetched:", user);
 
-  // 4) After creating order, decrement product quantity, increment product sold
-  if (order) {
-    const bulkOption = cart.cartItems.map((item) => ({
-      updateOne: {
-        filter: { _id: item.product },
-        update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
-      },
-    }));
-    await Product.bulkWrite(bulkOption, {});
+    // Create order with default paymentMethodType "card"
+    const order = await Order.create({
+      user: user._id,
+      cartItems: cart.cartItems,
+      shippingAddress,
+      totalOrderPrice: orderPrice,
+      isPaid: true,
+      paidAt: Date.now(),
+      paymentMethodType: "card",
+    });
 
-    // 5) Clear cart depend on cartId
-    await Cart.findByIdAndDelete(cartId);
-    console.log(" end55555555555555555/////////////order=========:");
+    console.log("Order created successfully:", order);
+
+    // After creating order, decrement product quantity, increment product sold
+    if (order) {
+      const bulkOption = cart.cartItems.map((item) => ({
+        updateOne: {
+          filter: { _id: item.product },
+          update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+        },
+      }));
+
+      await Product.bulkWrite(bulkOption, {});
+      console.log("Product quantities updated successfully.");
+
+      // Clear cart based on cartId
+      await Cart.findByIdAndDelete(cartId);
+      console.log("Cart cleared successfully.");
+    }
+  } catch (error) {
+    console.error("Error creating order:", error);
   }
 };
+
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   console.log("Webhook received:", req.body);
   const sig = req.headers["stripe-signature"];
