@@ -186,7 +186,7 @@ const createCardOrder = async (session) => {
       totalOrderPrice: orderPrice,
       isPaid: true,
       paidAt: Date.now(),
-      paymentMethodType: "card",
+      paymentMethodType: "Card",
     });
 
     console.log("Order created successfully:", order);
