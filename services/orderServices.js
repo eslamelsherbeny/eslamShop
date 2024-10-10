@@ -191,8 +191,15 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  console.log("Received event--------------:", event);
+
   if (event.type === "checkout.session.completed") {
     //  Create order
+    console.log(
+      "Checkout session details:+++++++++++++++++++++",
+      event.data.object
+    );
     createCardOrder(event.data.object);
   }
 
