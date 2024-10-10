@@ -146,13 +146,26 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
 
 const createCardOrder = async (session) => {
   try {
-    console.log("order=========:", session);
+    console.log("Session details:", session);
     const cartId = session.client_reference_id;
     const shippingAddress = session.metadata;
-    const oderPrice = session.amount_total / 100;
+    const orderPrice = session.amount_total / 100;
+    const customerEmail = session.customer_email;
+
+    // Log the critical data to make sure it exists
+    console.log("Cart ID:", cartId);
+    console.log("Shipping Address:", shippingAddress);
+    console.log("Order Price:", orderPrice);
+    console.log("Customer Email:", customerEmail);
+
+    if (!cartId || !customerEmail) {
+      console.error("Missing necessary data for creating order.");
+      return;
+    }
 
     const cart = await Cart.findById(cartId);
-    const user = await User.findOne({ email: session.customer_email });
+    const user = await User.findOne({ email: customerEmail });
+
     if (!cart) {
       console.error("Cart not found");
       return next(new ApiError("Cart not found", 404));
@@ -170,7 +183,7 @@ const createCardOrder = async (session) => {
       user: user._id,
       cartItems: cart.cartItems,
       shippingAddress,
-      totalOrderPrice: oderPrice,
+      totalOrderPrice: orderPrice,
       isPaid: true,
       paidAt: Date.now(),
       paymentMethodType: "card",
