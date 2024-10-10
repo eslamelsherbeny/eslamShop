@@ -145,6 +145,7 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
 });
 
 const createCardOrder = async (session) => {
+  console.log("order=========:", session);
   const cartId = session.client_reference_id;
   const shippingAddress = session.metadata;
   const oderPrice = session.amount_total / 100;
@@ -163,6 +164,8 @@ const createCardOrder = async (session) => {
     paymentMethodType: "card",
   });
 
+  console.log(" after/////////////order=========:");
+
   // 4) After creating order, decrement product quantity, increment product sold
   if (order) {
     const bulkOption = cart.cartItems.map((item) => ({
@@ -175,6 +178,7 @@ const createCardOrder = async (session) => {
 
     // 5) Clear cart depend on cartId
     await Cart.findByIdAndDelete(cartId);
+    console.log(" end55555555555555555/////////////order=========:");
   }
 };
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
