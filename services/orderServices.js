@@ -144,7 +144,7 @@ exports.createCheckoutSession = asyncHandler(async (req, res, next) => {
   res.status(200).json({ status: "success", data: session, url: session.url });
 });
 
-const createCardOrder = async (session) => {
+const createCardOrder = async (session, next) => {
   try {
     console.log("Session details:", session);
     const cartId = session.client_reference_id;
@@ -237,7 +237,7 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
       "Checkout session details:+++++++++++++++++++++",
       event.data.object
     );
-    createCardOrder(event.data.object);
+    createCardOrder(event.data.object, next);
   }
 
   res.status(200).json({ received: true });
