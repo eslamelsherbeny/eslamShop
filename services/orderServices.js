@@ -178,6 +178,7 @@ const createCardOrder = async (session) => {
   }
 };
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
+  console.log("Webhook received:", req.body);
   const sig = req.headers["stripe-signature"];
 
   let event;
@@ -189,6 +190,7 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
+    console.log("Webhook Error:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
