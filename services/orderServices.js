@@ -149,31 +149,28 @@ const createCardOrder = async (session) => {
     console.log("order=========:", session);
     const cartId = session.client_reference_id;
     const shippingAddress = session.metadata;
-    const orderPrice = session.amount_total / 100;
+    const oderPrice = session.amount_total / 100;
 
-    // Fetch Cart and User
     const cart = await Cart.findById(cartId);
     const user = await User.findOne({ email: session.customer_email });
-
     if (!cart) {
       console.error("Cart not found");
-      return;
-    }
-    if (!user) {
-      console.error("User not found");
-      return;
+      return next(new ApiError("Cart not found", 404));
     }
 
-    // Log the fetched cart and user
+    if (!user) {
+      console.error("User not found");
+      return next(new ApiError("User not found", 404));
+    }
+
     console.log("Cart fetched:", cart);
     console.log("User fetched:", user);
 
-    // Create order with default paymentMethodType "card"
     const order = await Order.create({
       user: user._id,
       cartItems: cart.cartItems,
       shippingAddress,
-      totalOrderPrice: orderPrice,
+      totalOrderPrice: oderPrice,
       isPaid: true,
       paidAt: Date.now(),
       paymentMethodType: "card",
@@ -181,7 +178,6 @@ const createCardOrder = async (session) => {
 
     console.log("Order created successfully:", order);
 
-    // After creating order, decrement product quantity, increment product sold
     if (order) {
       const bulkOption = cart.cartItems.map((item) => ({
         updateOne: {
@@ -189,7 +185,6 @@ const createCardOrder = async (session) => {
           update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
         },
       }));
-
       await Product.bulkWrite(bulkOption, {});
       console.log("Product quantities updated successfully.");
 
