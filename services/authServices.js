@@ -8,6 +8,7 @@ const ApiError = require("../utils/apiError");
 const createToken = require("../utils/createToken");
 
 const sendEmail = require("../utils/sendEmail");
+const { sanatizeData } = require("../utils/sanitizeData");
 
 // signUp service
 exports.signup = asyncHandler(async (req, res, next) => {
@@ -36,7 +37,7 @@ exports.login = asyncHandler(async (req, res, next) => {
   const token = createToken(user._id);
 
   res.status(200).json({
-    data: user,
+    data: sanatizeData(user),
     token,
   });
 });

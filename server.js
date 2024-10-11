@@ -1,11 +1,15 @@
 const path = require("path");
 
 const cors = require("cors");
-
+const hpp = require("hpp");
+const rateLimit = require("express-rate-limit");
+const mongoSanitize = require("express-mongo-sanitize");
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const compression = require("compression");
+
+const xss = require("xss-clean");
 
 dotenv.config();
 const dbConnection = require("./confiq/dataBase");
@@ -34,7 +38,7 @@ app.post(
 );
 
 // middleware
-app.use(express.json());
+app.use(express.json({ limit: "20kb" }));
 
 app.use(express.static(path.join(__dirname, "uploads")));
 
@@ -43,7 +47,31 @@ if (process.env.NODE_ENV === "development") {
   console.log(`mode is ${process.env.NODE_ENV}`);
 }
 
+app.use(mongoSanitize());
+
+app.use(xss());
 // mount routes
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+
+  message: "Too many requests from this IP, please try again after 15 minutes",
+});
+
+app.use("/api", limiter);
+
+app.use(
+  hpp({
+    whitelist: [
+      "ratingQuantity",
+      "ratingAverage",
+      "quantity",
+      "maxGroupSize",
+      "sold",
+      "price",
+    ],
+  })
+);
 
 mountRoutes(app);
 
